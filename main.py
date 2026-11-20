@@ -32,23 +32,23 @@ async def main():
     dp = Dispatcher()
     dp["db"] = db
 
-    # Подсчёт активности участников
+    # Сначала подключаем команды
+    dp.include_router(owner_router)
+    dp.include_router(admin_router)
+    dp.include_router(user_router)
+
+    # Подсчёт активности после обработки команд
     @dp.message()
     async def count_messages(message: Message):
         if message.from_user and not message.from_user.is_bot:
             await db.save_user(
                 message.chat.id,
-                message.from_user.id,
-                message.from_user.full_name
+                message.from_user
             )
             await db.record_activity(
                 message.chat.id,
                 message.from_user.id
             )
-
-    dp.include_router(owner_router)
-    dp.include_router(admin_router)
-    dp.include_router(user_router)
 
     try:
         await bot.delete_webhook(drop_pending_updates=True)
@@ -61,4 +61,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
